@@ -25,9 +25,11 @@ type PlatformLoginResponse = {
   platform_token?: string
 }
 
+const PLATFORM_AUTH_PATH = "/auth/platform-login"
+
 const resolvePlatformCallbackUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"
-  return `${baseUrl.replace(/\/+$/, "")}/auth/callback`
+  return baseUrl.replace(/\/+$/, "") + "/"
 }
 
 export const retrieveCustomer =
@@ -74,76 +76,6 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
-export async function signup(_currentState: unknown, formData: FormData) {
-  const password = formData.get("password") as string
-  const customerForm = {
-    email: formData.get("email") as string,
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
-    phone: formData.get("phone") as string,
-  }
-
-  try {
-    const token = await sdk.auth.register("customer", "emailpass", {
-      email: customerForm.email,
-      password: password,
-    })
-
-    await setAuthToken(token as string)
-    await removePlatformAuthContext()
-
-    const headers = {
-      ...(await getAuthHeaders()),
-    }
-
-    const { customer: createdCustomer } = await sdk.store.customer.create(
-      customerForm,
-      {},
-      headers
-    )
-
-    const loginToken = await sdk.auth.login("customer", "emailpass", {
-      email: customerForm.email,
-      password,
-    })
-
-    await setAuthToken(loginToken as string)
-
-    const customerCacheTag = await getCacheTag("customers")
-    revalidateTag(customerCacheTag)
-
-    await transferCart()
-
-    return createdCustomer
-  } catch (error: any) {
-    return error.toString()
-  }
-}
-
-export async function login(_currentState: unknown, formData: FormData) {
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-
-  try {
-    await sdk.auth
-      .login("customer", "emailpass", { email, password })
-      .then(async (token) => {
-        await setAuthToken(token as string)
-        await removePlatformAuthContext()
-        const customerCacheTag = await getCacheTag("customers")
-        revalidateTag(customerCacheTag)
-      })
-  } catch (error: any) {
-    return error.toString()
-  }
-
-  try {
-    await transferCart()
-  } catch (error: any) {
-    return error.toString()
-  }
-}
-
 export async function signout(countryCode: string) {
   await sdk.auth.logout()
 
@@ -163,7 +95,7 @@ export async function signout(countryCode: string) {
 
 export async function startPlatformLogin() {
   const response = await sdk.client
-    .fetch<PlatformLoginResponse>("/auth/platform-login", {
+    .fetch<PlatformLoginResponse>(PLATFORM_AUTH_PATH, {
       method: "POST",
       body: {
         callback_url: resolvePlatformCallbackUrl(),
@@ -190,7 +122,7 @@ export async function completePlatformLogin({
   }
 
   const response = await sdk.client
-    .fetch<PlatformLoginResponse>("/auth/platform-login", {
+    .fetch<PlatformLoginResponse>(PLATFORM_AUTH_PATH, {
       method: "POST",
       body: {
         ...(code ? { code } : {}),

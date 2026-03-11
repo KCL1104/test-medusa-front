@@ -4,10 +4,141 @@ import { NextRequest, NextResponse } from "next/server"
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+const PLATFORM_AUTH_PATH = "/auth/platform-login"
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
+}
+
+type PlatformLoginResponse = {
+  token?: string
+  message?: string
+  platform_uid?: string
+  platform_token?: string
+}
+
+function getPlatformAuthParams(searchParams: URLSearchParams) {
+  const code = searchParams.get("code") ?? undefined
+  const token =
+    searchParams.get("token") ||
+    searchParams.get("exchange_token") ||
+    searchParams.get("exchangeToken") ||
+    searchParams.get("exchange-token") ||
+    undefined
+
+  return {
+    code,
+    token,
+    hasAuthParams: Boolean(code || token),
+  }
+}
+
+async function completePlatformAuth({
+  request,
+  countryCode,
+  cacheId,
+  code,
+  token,
+}: {
+  request: NextRequest
+  countryCode: string
+  cacheId: string
+  code?: string
+  token?: string
+}) {
+  const accountUrl = `${request.nextUrl.origin}/${countryCode}/account`
+
+  if (!BACKEND_URL) {
+    return NextResponse.redirect(
+      `${accountUrl}?platform_oauth_error=${encodeURIComponent("Missing MEDUSA_BACKEND_URL")}`,
+      307
+    )
+  }
+
+  try {
+    const authUrl = `${BACKEND_URL}${PLATFORM_AUTH_PATH}`
+
+    const authResponse = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...(code ? { code } : {}),
+        ...(token ? { token } : {}),
+      }),
+      cache: "no-store",
+    })
+
+    let payload: PlatformLoginResponse | Record<string, any> | null = null
+    try {
+      payload = await authResponse.json()
+    } catch {
+      payload = null
+    }
+
+    if (!authResponse.ok) {
+      const errorMessage =
+        (payload as Record<string, any> | null)?.message ||
+        "Platform login failed"
+      throw new Error(String(errorMessage))
+    }
+
+    const loginResult = payload as PlatformLoginResponse | null
+    if (!loginResult?.token) {
+      throw new Error(loginResult?.message || "Platform login failed")
+    }
+
+    const response = NextResponse.redirect(accountUrl, 307)
+    const secure = process.env.NODE_ENV === "production"
+
+    response.cookies.set("_medusa_cache_id", cacheId, {
+      maxAge: 60 * 60 * 24,
+    })
+    response.cookies.set("_medusa_jwt", loginResult.token, {
+      maxAge: 60 * 60 * 24 * 7,
+      httpOnly: true,
+      sameSite: "strict",
+      secure,
+    })
+
+    if (loginResult.platform_uid) {
+      response.cookies.set("_medusa_platform_uid", loginResult.platform_uid, {
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        sameSite: "strict",
+        secure,
+      })
+    } else {
+      response.cookies.set("_medusa_platform_uid", "", { maxAge: -1 })
+    }
+
+    const platformToken = loginResult.platform_token ?? token
+    if (platformToken) {
+      response.cookies.set("_medusa_platform_token", platformToken, {
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        sameSite: "strict",
+        secure,
+      })
+    } else {
+      response.cookies.set("_medusa_platform_token", "", { maxAge: -1 })
+    }
+
+    return response
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Platform login failed"
+    const response = NextResponse.redirect(
+      `${accountUrl}?platform_oauth_error=${encodeURIComponent(message)}`,
+      307
+    )
+    response.cookies.set("_medusa_platform_uid", "", { maxAge: -1 })
+    response.cookies.set("_medusa_platform_token", "", { maxAge: -1 })
+
+    return response
+  }
 }
 
 async function getRegionMap(cacheId: string) {
@@ -104,6 +235,10 @@ async function getCountryCode(
  * Middleware to handle region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
+  const authParams = getPlatformAuthParams(request.nextUrl.searchParams)
+  const hasPlatformCallback =
+    request.nextUrl.pathname === "/" && authParams.hasAuthParams
+
   let redirectUrl = request.nextUrl.href
 
   let response = NextResponse.redirect(redirectUrl, 307)
@@ -115,6 +250,26 @@ export async function middleware(request: NextRequest) {
   const regionMap = await getRegionMap(cacheId)
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
+  const hasLegacyCallbackPath =
+    request.nextUrl.pathname.endsWith("/auth/callback") &&
+    authParams.hasAuthParams
+  const isCountryAccountPath =
+    Boolean(countryCode) &&
+    request.nextUrl.pathname === `/${countryCode}/account` &&
+    authParams.hasAuthParams
+
+  if (
+    countryCode &&
+    (hasPlatformCallback || hasLegacyCallbackPath || isCountryAccountPath)
+  ) {
+    return completePlatformAuth({
+      request,
+      countryCode,
+      cacheId,
+      code: authParams.code,
+      token: authParams.token,
+    })
+  }
 
   const urlHasCountryCode =
     countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)

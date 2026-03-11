@@ -1,7 +1,7 @@
 "use client"
 
 import { RadioGroup } from "@headlessui/react"
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isChainup, isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { Button, Container, Heading, Text, clx } from "@medusajs/ui"
@@ -13,16 +13,22 @@ import Divider from "@modules/common/components/divider"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
+const MISSING_CHAINUP_SESSION_MESSAGE =
+  "ChainUp requires Platform sign-in before checkout."
+
 const Payment = ({
   cart,
   availablePaymentMethods,
+  hasPlatformSession,
 }: {
   cart: any
   availablePaymentMethods: any[]
+  hasPlatformSession: boolean
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
   )
+  const hasActiveChainupSession = isChainup(activeSession?.provider_id)
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,13 +44,29 @@ const Payment = ({
 
   const isOpen = searchParams.get("step") === "payment"
 
+  const shouldBlockChainupSelection = (method?: string) => {
+    return isChainup(method) && !hasPlatformSession && !hasActiveChainupSession
+  }
+
   const setPaymentMethod = async (method: string) => {
     setError(null)
+
+    if (shouldBlockChainupSelection(method)) {
+      setSelectedPaymentMethod("")
+      setError(MISSING_CHAINUP_SESSION_MESSAGE)
+      return
+    }
+
     setSelectedPaymentMethod(method)
+
     if (isStripeLike(method)) {
-      await initiatePaymentSession(cart, {
-        provider_id: method,
-      })
+      try {
+        await initiatePaymentSession(cart, {
+          provider_id: method,
+        })
+      } catch (err: any) {
+        setError(err?.message || "Failed to initialize payment session")
+      }
     }
   }
 
@@ -73,11 +95,22 @@ const Payment = ({
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
+      if (!selectedPaymentMethod && !paidByGiftcard) {
+        throw new Error("Please select a payment method.")
+      }
+
       const shouldInputCard =
         isStripeLike(selectedPaymentMethod) && !activeSession
 
       const checkActiveSession =
         activeSession?.provider_id === selectedPaymentMethod
+
+      if (
+        shouldBlockChainupSelection(selectedPaymentMethod) &&
+        !checkActiveSession
+      ) {
+        throw new Error(MISSING_CHAINUP_SESSION_MESSAGE)
+      }
 
       if (!checkActiveSession) {
         await initiatePaymentSession(cart, {
@@ -142,25 +175,41 @@ const Payment = ({
               >
                 {availablePaymentMethods.map((paymentMethod) => (
                   <div key={paymentMethod.id}>
-                    {isStripeLike(paymentMethod.id) ? (
-                      <StripeCardContainer
-                        paymentProviderId={paymentMethod.id}
-                        selectedPaymentOptionId={selectedPaymentMethod}
-                        paymentInfoMap={paymentInfoMap}
-                        setCardBrand={setCardBrand}
-                        setError={setError}
-                        setCardComplete={setCardComplete}
-                      />
-                    ) : (
-                      <PaymentContainer
-                        paymentInfoMap={paymentInfoMap}
-                        paymentProviderId={paymentMethod.id}
-                        selectedPaymentOptionId={selectedPaymentMethod}
-                      />
-                    )}
+                    {(() => {
+                      const isPaymentMethodDisabled =
+                        shouldBlockChainupSelection(paymentMethod.id)
+
+                      return isStripeLike(paymentMethod.id) ? (
+                        <StripeCardContainer
+                          paymentProviderId={paymentMethod.id}
+                          selectedPaymentOptionId={selectedPaymentMethod}
+                          paymentInfoMap={paymentInfoMap}
+                          setCardBrand={setCardBrand}
+                          setError={setError}
+                          setCardComplete={setCardComplete}
+                          disabled={isPaymentMethodDisabled}
+                        />
+                      ) : (
+                        <PaymentContainer
+                          paymentInfoMap={paymentInfoMap}
+                          paymentProviderId={paymentMethod.id}
+                          selectedPaymentOptionId={selectedPaymentMethod}
+                          disabled={isPaymentMethodDisabled}
+                        />
+                      )
+                    })()}
                   </div>
                 ))}
               </RadioGroup>
+              {!hasPlatformSession &&
+                !hasActiveChainupSession &&
+                availablePaymentMethods.some((method) =>
+                  isChainup(method.id)
+                ) && (
+                  <Text className="txt-small text-ui-fg-subtle mt-2">
+                    {MISSING_CHAINUP_SESSION_MESSAGE}
+                  </Text>
+                )}
             </>
           )}
 

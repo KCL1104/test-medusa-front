@@ -1,5 +1,6 @@
 import { listCartShippingMethods } from "@lib/data/fulfillment"
 import { listCartPaymentMethods } from "@lib/data/payment"
+import { getPlatformAuthContext } from "@lib/data/cookies"
 import { HttpTypes } from "@medusajs/types"
 import Addresses from "@modules/checkout/components/addresses"
 import Payment from "@modules/checkout/components/payment"
@@ -19,6 +20,7 @@ export default async function CheckoutForm({
 
   const shippingMethods = await listCartShippingMethods(cart.id)
   const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? "")
+  const { platformUid } = await getPlatformAuthContext()
 
   if (!shippingMethods || !paymentMethods) {
     return null
@@ -30,7 +32,11 @@ export default async function CheckoutForm({
 
       <Shipping cart={cart} availableShippingMethods={shippingMethods} />
 
-      <Payment cart={cart} availablePaymentMethods={paymentMethods} />
+      <Payment
+        cart={cart}
+        availablePaymentMethods={paymentMethods}
+        hasPlatformSession={Boolean(platformUid)}
+      />
 
       <Review cart={cart} />
     </div>
