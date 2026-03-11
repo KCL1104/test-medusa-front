@@ -13,10 +13,14 @@ const Review = ({ cart }: { cart: any }) => {
   const paidByGiftcard =
     cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
 
+  const pendingPaymentSession = cart.payment_collection?.payment_sessions?.find(
+    (session: any) => session.status === "pending"
+  )
+
   const previousStepsCompleted =
     cart.shipping_address &&
     cart.shipping_methods.length > 0 &&
-    (cart.payment_collection || paidByGiftcard)
+    (pendingPaymentSession || paidByGiftcard)
 
   return (
     <div className="bg-white">

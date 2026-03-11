@@ -15,6 +15,20 @@ import { useCallback, useEffect, useState } from "react"
 
 const MISSING_CHAINUP_SESSION_MESSAGE =
   "ChainUp requires Platform sign-in before checkout."
+const SERVER_ACTION_MISMATCH_TOKEN = "Failed to find Server Action"
+const SERVER_ACTION_MISMATCH_MESSAGE =
+  "Storefront was just updated. Please refresh and choose your payment method again."
+
+const getCheckoutErrorMessage = (err: unknown) => {
+  const message =
+    err instanceof Error ? err.message : "Failed to initialize payment session"
+
+  if (message.includes(SERVER_ACTION_MISMATCH_TOKEN)) {
+    return SERVER_ACTION_MISMATCH_MESSAGE
+  }
+
+  return message
+}
 
 const Payment = ({
   cart,
@@ -64,8 +78,13 @@ const Payment = ({
         await initiatePaymentSession(cart, {
           provider_id: method,
         })
+        router.refresh()
       } catch (err: any) {
-        setError(err?.message || "Failed to initialize payment session")
+        const message = getCheckoutErrorMessage(err)
+        setError(message)
+        if (message === SERVER_ACTION_MISMATCH_MESSAGE) {
+          router.refresh()
+        }
       }
     }
   }
@@ -119,15 +138,27 @@ const Payment = ({
       }
 
       if (!shouldInputCard) {
-        return router.push(
+        router.push(
           pathname + "?" + createQueryString("step", "review"),
           {
             scroll: false,
           }
         )
+        if (!checkActiveSession) {
+          router.refresh()
+        }
+        return
+      }
+
+      if (!checkActiveSession) {
+        router.refresh()
       }
     } catch (err: any) {
-      setError(err.message)
+      const message = getCheckoutErrorMessage(err)
+      setError(message)
+      if (message === SERVER_ACTION_MISMATCH_MESSAGE) {
+        router.refresh()
+      }
     } finally {
       setIsLoading(false)
     }
