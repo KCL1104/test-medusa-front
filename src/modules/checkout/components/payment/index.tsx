@@ -1,7 +1,7 @@
 "use client"
 
 import { RadioGroup } from "@headlessui/react"
-import { isChainup, isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStarVaults, isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { Button, Container, Heading, Text, clx } from "@medusajs/ui"
@@ -10,21 +10,18 @@ import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
 import Divider from "@modules/common/components/divider"
+import { useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
-const MISSING_CHAINUP_SESSION_MESSAGE =
-  "ChainUp requires Platform sign-in before checkout."
 const SERVER_ACTION_MISMATCH_TOKEN = "Failed to find Server Action"
-const SERVER_ACTION_MISMATCH_MESSAGE =
-  "Storefront was just updated. Please refresh and choose your payment method again."
 
-const getCheckoutErrorMessage = (err: unknown) => {
+const getCheckoutErrorMessage = (err: unknown, storefrontUpdatedMessage: string) => {
   const message =
     err instanceof Error ? err.message : "Failed to initialize payment session"
 
   if (message.includes(SERVER_ACTION_MISMATCH_TOKEN)) {
-    return SERVER_ACTION_MISMATCH_MESSAGE
+    return storefrontUpdatedMessage
   }
 
   return message
@@ -33,16 +30,17 @@ const getCheckoutErrorMessage = (err: unknown) => {
 const Payment = ({
   cart,
   availablePaymentMethods,
-  hasPlatformSession,
+  hasStarVaultsSession,
 }: {
   cart: any
   availablePaymentMethods: any[]
-  hasPlatformSession: boolean
+  hasStarVaultsSession: boolean
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
   )
-  const hasActiveChainupSession = isChainup(activeSession?.provider_id)
+  const hasActiveStarVaultsSession = isStarVaults(activeSession?.provider_id)
+  const t = useTranslations("Checkout.Payment")
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,16 +56,20 @@ const Payment = ({
 
   const isOpen = searchParams.get("step") === "payment"
 
-  const shouldBlockChainupSelection = (method?: string) => {
-    return isChainup(method) && !hasPlatformSession && !hasActiveChainupSession
+  const shouldBlockStarVaultsSelection = (method?: string) => {
+    return (
+      isStarVaults(method) &&
+      !hasStarVaultsSession &&
+      !hasActiveStarVaultsSession
+    )
   }
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
 
-    if (shouldBlockChainupSelection(method)) {
+    if (shouldBlockStarVaultsSelection(method)) {
       setSelectedPaymentMethod("")
-      setError(MISSING_CHAINUP_SESSION_MESSAGE)
+      setError(t("signInRequired"))
       return
     }
 
@@ -80,9 +82,9 @@ const Payment = ({
         })
         router.refresh()
       } catch (err: any) {
-        const message = getCheckoutErrorMessage(err)
+        const message = getCheckoutErrorMessage(err, t("storefrontUpdated"))
         setError(message)
-        if (message === SERVER_ACTION_MISMATCH_MESSAGE) {
+        if (message === t("storefrontUpdated")) {
           router.refresh()
         }
       }
@@ -105,7 +107,7 @@ const Payment = ({
     [searchParams]
   )
 
-  const createChainupReturnPage = useCallback(() => {
+  const createStarVaultsReturnPage = useCallback(() => {
     if (typeof window === "undefined") {
       return undefined
     }
@@ -133,23 +135,23 @@ const Payment = ({
         activeSession?.provider_id === selectedPaymentMethod
 
       if (
-        shouldBlockChainupSelection(selectedPaymentMethod) &&
+        shouldBlockStarVaultsSelection(selectedPaymentMethod) &&
         !checkActiveSession
       ) {
-        throw new Error(MISSING_CHAINUP_SESSION_MESSAGE)
+        throw new Error(t("signInRequired"))
       }
 
       if (!checkActiveSession) {
-        const chainupReturnPage = isChainup(selectedPaymentMethod)
-          ? createChainupReturnPage()
+        const starVaultsReturnPage = isStarVaults(selectedPaymentMethod)
+          ? createStarVaultsReturnPage()
           : undefined
 
         await initiatePaymentSession(cart, {
           provider_id: selectedPaymentMethod,
-          ...(chainupReturnPage
+          ...(starVaultsReturnPage
             ? {
                 data: {
-                  return_page: chainupReturnPage,
+                  return_page: starVaultsReturnPage,
                 },
               }
             : {}),
@@ -173,9 +175,9 @@ const Payment = ({
         router.refresh()
       }
     } catch (err: any) {
-      const message = getCheckoutErrorMessage(err)
+      const message = getCheckoutErrorMessage(err, t("storefrontUpdated"))
       setError(message)
-      if (message === SERVER_ACTION_MISMATCH_MESSAGE) {
+      if (message === t("storefrontUpdated")) {
         router.refresh()
       }
     } finally {
@@ -200,7 +202,7 @@ const Payment = ({
             }
           )}
         >
-          Payment
+          {t("payment")}
           {!isOpen && paymentReady && <CheckCircleSolid />}
         </Heading>
         {!isOpen && paymentReady && (
@@ -210,7 +212,7 @@ const Payment = ({
               className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
               data-testid="edit-payment-button"
             >
-              Edit
+              {t("edit")}
             </button>
           </Text>
         )}
@@ -227,7 +229,7 @@ const Payment = ({
                   <div key={paymentMethod.id}>
                     {(() => {
                       const isPaymentMethodDisabled =
-                        shouldBlockChainupSelection(paymentMethod.id)
+                        shouldBlockStarVaultsSelection(paymentMethod.id)
 
                       return isStripeLike(paymentMethod.id) ? (
                         <StripeCardContainer
@@ -251,13 +253,13 @@ const Payment = ({
                   </div>
                 ))}
               </RadioGroup>
-              {!hasPlatformSession &&
-                !hasActiveChainupSession &&
+              {!hasStarVaultsSession &&
+                !hasActiveStarVaultsSession &&
                 availablePaymentMethods.some((method) =>
-                  isChainup(method.id)
+                  isStarVaults(method.id)
                 ) && (
                   <Text className="txt-small text-ui-fg-subtle mt-2">
-                    {MISSING_CHAINUP_SESSION_MESSAGE}
+                    {t("signInRequired")}
                   </Text>
                 )}
             </>
@@ -266,13 +268,13 @@ const Payment = ({
           {paidByGiftcard && (
             <div className="flex flex-col w-1/3">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Payment method
+                {t("paymentMethod")}
               </Text>
               <Text
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method-summary"
               >
-                Gift card
+                {t("giftCard")}
               </Text>
             </div>
           )}
@@ -294,8 +296,8 @@ const Payment = ({
             data-testid="submit-payment-button"
           >
             {!activeSession && isStripeLike(selectedPaymentMethod)
-              ? " Enter card details"
-              : "Continue to review"}
+              ? ` ${t("enterCardDetails")}`
+              : t("continueToReview")}
           </Button>
         </div>
 
@@ -304,7 +306,7 @@ const Payment = ({
             <div className="flex items-start gap-x-1 w-full">
               <div className="flex flex-col w-1/3">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Payment method
+                  {t("paymentMethod")}
                 </Text>
                 <Text
                   className="txt-medium text-ui-fg-subtle"
@@ -316,7 +318,7 @@ const Payment = ({
               </div>
               <div className="flex flex-col w-1/3">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Payment details
+                  {t("paymentDetails")}
                 </Text>
                 <div
                   className="flex gap-2 txt-medium text-ui-fg-subtle items-center"
@@ -330,7 +332,7 @@ const Payment = ({
                   <Text>
                     {isStripeLike(selectedPaymentMethod) && cardBrand
                       ? cardBrand
-                      : "Another step will appear"}
+                      : t("anotherStep")}
                   </Text>
                 </div>
               </div>
@@ -338,13 +340,13 @@ const Payment = ({
           ) : paidByGiftcard ? (
             <div className="flex flex-col w-1/3">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Payment method
+                {t("paymentMethod")}
               </Text>
               <Text
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method-summary"
               >
-                Gift card
+                {t("giftCard")}
               </Text>
             </div>
           ) : null}

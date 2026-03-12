@@ -1,11 +1,12 @@
 "use client"
 
-import { isChainup, isManual, isStripeLike } from "@lib/constants"
-import { placeOrder } from "@lib/data/cart"
+import { isManual, isStarVaults, isStripeLike } from "@lib/constants"
+import { initiatePaymentSession, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
-import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { usePathname, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import ErrorMessage from "../error-message"
 
@@ -14,17 +15,43 @@ type PaymentButtonProps = {
   "data-testid": string
 }
 
-const CHAINUP_NOT_AUTHORIZED_MESSAGE =
-  "ChainUp payment is not completed yet. Please continue payment and try again."
-const CHAINUP_RETURN_STORAGE_KEY_PREFIX = "chainup_checkout_returned"
+const STAR_VAULTS_PROVIDER_ID = "pp_chainup_platform"
+const STAR_VAULTS_CHECKOUT_STATE_STORAGE_KEY_PREFIX = "chainup_checkout_state"
+const STAR_VAULTS_AUTO_RETRY_STORAGE_KEY_PREFIX = "chainup_checkout_auto_retry_used"
+const STAR_VAULTS_CHECKOUT_STATE_RETURNED = "returned"
+const STAR_VAULTS_CHECKOUT_STATE_REDIRECTING = "redirecting"
 
-const getChainupReturnStorageKey = (cartId?: string) =>
-  `${CHAINUP_RETURN_STORAGE_KEY_PREFIX}:${cartId || "unknown"}`
+const getStarVaultsCheckoutStateStorageKey = (cartId?: string) =>
+  `${STAR_VAULTS_CHECKOUT_STATE_STORAGE_KEY_PREFIX}:${cartId || "unknown"}`
+
+const getStarVaultsAutoRetryStorageKey = (cartId?: string) =>
+  `${STAR_VAULTS_AUTO_RETRY_STORAGE_KEY_PREFIX}:${cartId || "unknown"}`
+
+const getStarVaultsPayPageUrl = (paymentCollection?: any) => {
+  if (!paymentCollection?.payment_sessions?.length) {
+    return undefined
+  }
+
+  const session =
+    paymentCollection.payment_sessions.find(
+      (session: any) =>
+        session.status === "pending" && session.provider_id === STAR_VAULTS_PROVIDER_ID
+    ) ??
+    paymentCollection.payment_sessions.find(
+      (session: any) => session.provider_id === STAR_VAULTS_PROVIDER_ID
+    )
+
+  return typeof session?.data?.pay_page_url === "string"
+    ? session.data.pay_page_url
+    : undefined
+}
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
   "data-testid": dataTestId,
 }) => {
+  const t = useTranslations("Checkout.PaymentButton")
+
   const notReady =
     !cart ||
     !cart.shipping_address ||
@@ -50,16 +77,16 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
-    case isChainup(paymentSession?.provider_id):
+    case isStarVaults(paymentSession?.provider_id):
       return (
-        <ChainupPaymentButton
+        <StarVaultsPaymentButton
           cart={cart}
           notReady={notReady}
           data-testid={dataTestId}
         />
       )
     default:
-      return <Button disabled>Select a payment method</Button>
+      return <Button disabled>{t("selectPaymentMethod")}</Button>
   }
 }
 
@@ -72,6 +99,7 @@ const StripePaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
+  const t = useTranslations("Checkout.PaymentButton")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -160,7 +188,7 @@ const StripePaymentButton = ({
         isLoading={submitting}
         data-testid={dataTestId}
       >
-        Place order
+        {t("placeOrder")}
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -171,6 +199,7 @@ const StripePaymentButton = ({
 }
 
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+  const t = useTranslations("Checkout.PaymentButton")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -199,7 +228,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         size="large"
         data-testid="submit-order-button"
       >
-        Place order
+        {t("placeOrder")}
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -209,7 +238,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   )
 }
 
-const ChainupPaymentButton = ({
+const StarVaultsPaymentButton = ({
   cart,
   notReady,
   "data-testid": dataTestId,
@@ -218,92 +247,183 @@ const ChainupPaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
+  const t = useTranslations("Checkout.PaymentButton")
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const hasQueryReturnFlag = searchParams.get("chainup_return") === "1"
-  const chainupReturnStorageKey = getChainupReturnStorageKey(cart.id)
+  const starVaultsCheckoutStateStorageKey = getStarVaultsCheckoutStateStorageKey(cart.id)
+  const starVaultsAutoRetryStorageKey = getStarVaultsAutoRetryStorageKey(cart.id)
 
-  const chainupSession =
+  const starVaultsSession =
     cart.payment_collection?.payment_sessions?.find(
-      (session) => session.status === "pending" && isChainup(session.provider_id)
+      (session) => session.status === "pending" && isStarVaults(session.provider_id)
     ) ??
     cart.payment_collection?.payment_sessions?.find((session) =>
-      isChainup(session.provider_id)
+      isStarVaults(session.provider_id)
     )
 
   const payPageUrl =
-    typeof chainupSession?.data?.pay_page_url === "string"
-      ? chainupSession.data.pay_page_url
+    typeof starVaultsSession?.data?.pay_page_url === "string"
+      ? starVaultsSession.data.pay_page_url
       : undefined
 
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [forceRedirectToPay, setForceRedirectToPay] = useState(false)
-  const [hasReturnedFromChainup, setHasReturnedFromChainup] =
+  const [resolvedPayPageUrl, setResolvedPayPageUrl] = useState<string | undefined>(
+    payPageUrl
+  )
+  const [hasReturnedFromStarVaults, setHasReturnedFromStarVaults] =
     useState(hasQueryReturnFlag)
+
+  useEffect(() => {
+    setResolvedPayPageUrl(payPageUrl)
+  }, [payPageUrl])
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return
     }
 
-    const hasStoredReturnFlag =
-      window.sessionStorage.getItem(chainupReturnStorageKey) === "1"
+    const storedCheckoutState = window.sessionStorage.getItem(
+      starVaultsCheckoutStateStorageKey
+    )
 
-    if (hasQueryReturnFlag || hasStoredReturnFlag) {
-      window.sessionStorage.setItem(chainupReturnStorageKey, "1")
-      setHasReturnedFromChainup(true)
+    if (hasQueryReturnFlag) {
+      window.sessionStorage.setItem(
+        starVaultsCheckoutStateStorageKey,
+        STAR_VAULTS_CHECKOUT_STATE_RETURNED
+      )
+      setHasReturnedFromStarVaults(true)
       return
     }
 
-    setHasReturnedFromChainup(false)
-  }, [chainupReturnStorageKey, hasQueryReturnFlag])
+    setHasReturnedFromStarVaults(
+      storedCheckoutState === STAR_VAULTS_CHECKOUT_STATE_RETURNED
+    )
+  }, [starVaultsCheckoutStateStorageKey, hasQueryReturnFlag])
+
+  const createStarVaultsReturnPage = () => {
+    if (typeof window === "undefined") {
+      return undefined
+    }
+
+    return `${window.location.origin}${pathname}`
+  }
+
+  const resolveStarVaultsPayPageUrl = async (reinitializeSession = false) => {
+    if (!reinitializeSession && resolvedPayPageUrl) {
+      return resolvedPayPageUrl
+    }
+
+    const starVaultsReturnPage = createStarVaultsReturnPage()
+    const refreshedSession = await initiatePaymentSession(cart, {
+      provider_id: STAR_VAULTS_PROVIDER_ID,
+      ...(starVaultsReturnPage
+        ? {
+            data: {
+              return_page: starVaultsReturnPage,
+            },
+          }
+        : {}),
+    })
+
+    const refreshedPayPageUrl =
+      getStarVaultsPayPageUrl(refreshedSession?.cart?.payment_collection) ??
+      getStarVaultsPayPageUrl(refreshedSession?.payment_collection)
+
+    const nextPayPageUrl = refreshedPayPageUrl ?? resolvedPayPageUrl
+    if (!nextPayPageUrl) {
+      throw new Error(t("missingPaymentUrl"))
+    }
+
+    setResolvedPayPageUrl(nextPayPageUrl)
+    return nextPayPageUrl
+  }
 
   const onPaymentCompleted = async () => {
-    await placeOrder()
-      .then(() => {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.removeItem(chainupReturnStorageKey)
-        }
-      })
-      .catch((err) => {
-        const message = err?.message || "Failed to complete ChainUp payment"
-        if (message.includes("was not authorized with the provider")) {
-          setErrorMessage(CHAINUP_NOT_AUTHORIZED_MESSAGE)
-          setForceRedirectToPay(true)
-          return
-        }
+    try {
+      await placeOrder()
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(starVaultsCheckoutStateStorageKey)
+        window.sessionStorage.removeItem(starVaultsAutoRetryStorageKey)
+      }
+    } catch (err: any) {
+      const message = err?.message || t("failedToComplete")
+      if (message.includes("was not authorized with the provider")) {
+        setErrorMessage(t("paymentNotCompleted"))
+        setHasReturnedFromStarVaults(false)
+        setForceRedirectToPay(true)
 
-        setErrorMessage(message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
+        if (typeof window !== "undefined") {
+          const hasAutoRetried =
+            window.sessionStorage.getItem(starVaultsAutoRetryStorageKey) === "1"
+
+          if (!hasAutoRetried) {
+            window.sessionStorage.setItem(starVaultsAutoRetryStorageKey, "1")
+            await redirectToStarVaultsPayment({
+              reinitializeSession: true,
+              resetAutoRetry: false,
+            })
+            return
+          }
+        }
+        return
+      }
+
+      setErrorMessage(message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const redirectToChainupPayment = () => {
-    if (!payPageUrl) {
+  const redirectToStarVaultsPayment = async ({
+    reinitializeSession = false,
+    resetAutoRetry = false,
+  }: {
+    reinitializeSession?: boolean
+    resetAutoRetry?: boolean
+  }) => {
+    try {
+      const nextPayPageUrl = await resolveStarVaultsPayPageUrl(reinitializeSession)
+
+      if (typeof window === "undefined") {
+        return
+      }
+
+      if (resetAutoRetry) {
+        window.sessionStorage.removeItem(starVaultsAutoRetryStorageKey)
+      }
+
+      window.sessionStorage.setItem(
+        starVaultsCheckoutStateStorageKey,
+        STAR_VAULTS_CHECKOUT_STATE_REDIRECTING
+      )
+      setHasReturnedFromStarVaults(false)
+      setForceRedirectToPay(false)
+      window.location.assign(nextPayPageUrl)
+    } catch (err: any) {
       setErrorMessage(
-        "Missing ChainUp payment page URL. Please go back and select ChainUp again."
+        err?.message || t("missingPaymentUrl")
       )
       setSubmitting(false)
-      return
     }
-
-    window.sessionStorage.setItem(chainupReturnStorageKey, "1")
-    window.location.assign(payPageUrl)
   }
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setSubmitting(true)
     setErrorMessage(null)
 
-    const shouldRedirectToPay = !hasReturnedFromChainup || forceRedirectToPay
+    const shouldRedirectToPay = !hasReturnedFromStarVaults || forceRedirectToPay
     if (shouldRedirectToPay) {
-      redirectToChainupPayment()
+      await redirectToStarVaultsPayment({
+        reinitializeSession: forceRedirectToPay,
+        resetAutoRetry: !forceRedirectToPay,
+      })
       return
     }
 
-    onPaymentCompleted()
+    await onPaymentCompleted()
   }
 
   return (
@@ -315,9 +435,11 @@ const ChainupPaymentButton = ({
         size="large"
         data-testid={dataTestId}
       >
-        {!hasReturnedFromChainup || forceRedirectToPay
-          ? "Continue to ChainUp payment"
-          : "Place order"}
+        {forceRedirectToPay
+          ? t("retryPayment")
+          : !hasReturnedFromStarVaults
+            ? t("continueToPayment")
+            : t("placeOrder")}
       </Button>
       <ErrorMessage error={errorMessage} data-testid="chainup-payment-error-message" />
     </>

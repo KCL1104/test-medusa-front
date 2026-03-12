@@ -4,14 +4,14 @@ import { NextRequest, NextResponse } from "next/server"
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
-const PLATFORM_AUTH_PATH = "/auth/platform-login"
+const STAR_VAULTS_AUTH_PATH = "/auth/platform-login"
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
 }
 
-type PlatformLoginResponse = {
+type StarVaultsLoginResponse = {
   token?: string
   message?: string
   platform_uid?: string
@@ -61,7 +61,7 @@ async function transferCartToCustomer({
   }
 }
 
-function getPlatformAuthParams(searchParams: URLSearchParams) {
+function getStarVaultsAuthParams(searchParams: URLSearchParams) {
   const code = searchParams.get("code") ?? undefined
   const token =
     searchParams.get("token") ||
@@ -77,7 +77,7 @@ function getPlatformAuthParams(searchParams: URLSearchParams) {
   }
 }
 
-async function completePlatformAuth({
+async function completeStarVaultsAuth({
   request,
   countryCode,
   code,
@@ -98,7 +98,7 @@ async function completePlatformAuth({
   }
 
   try {
-    const authUrl = `${BACKEND_URL}${PLATFORM_AUTH_PATH}`
+    const authUrl = `${BACKEND_URL}${STAR_VAULTS_AUTH_PATH}`
 
     const authResponse = await fetch(authUrl, {
       method: "POST",
@@ -112,7 +112,7 @@ async function completePlatformAuth({
       cache: "no-store",
     })
 
-    let payload: PlatformLoginResponse | Record<string, any> | null = null
+    let payload: StarVaultsLoginResponse | Record<string, any> | null = null
     try {
       payload = await authResponse.json()
     } catch {
@@ -122,13 +122,13 @@ async function completePlatformAuth({
     if (!authResponse.ok) {
       const errorMessage =
         (payload as Record<string, any> | null)?.message ||
-        "Platform login failed"
+        "Star Vaults login failed"
       throw new Error(String(errorMessage))
     }
 
-    const loginResult = payload as PlatformLoginResponse | null
+    const loginResult = payload as StarVaultsLoginResponse | null
     if (!loginResult?.token) {
-      throw new Error(loginResult?.message || "Platform login failed")
+      throw new Error(loginResult?.message || "Star Vaults login failed")
     }
 
     const cartId = request.cookies.get("_medusa_cart_id")?.value
@@ -185,7 +185,7 @@ async function completePlatformAuth({
     return response
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Platform login failed"
+      error instanceof Error ? error.message : "Star Vaults login failed"
     const response = NextResponse.redirect(
       `${accountUrl}?platform_oauth_error=${encodeURIComponent(message)}`,
       307
@@ -291,8 +291,8 @@ async function getCountryCode(
  * Middleware to handle region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
-  const authParams = getPlatformAuthParams(request.nextUrl.searchParams)
-  const hasPlatformCallback =
+  const authParams = getStarVaultsAuthParams(request.nextUrl.searchParams)
+  const hasStarVaultsCallback =
     request.nextUrl.pathname === "/" && authParams.hasAuthParams
 
   let redirectUrl = request.nextUrl.href
@@ -316,9 +316,9 @@ export async function middleware(request: NextRequest) {
 
   if (
     countryCode &&
-    (hasPlatformCallback || hasLegacyCallbackPath || isCountryAccountPath)
+    (hasStarVaultsCallback || hasLegacyCallbackPath || isCountryAccountPath)
   ) {
-    return completePlatformAuth({
+    return completeStarVaultsAuth({
       request,
       countryCode,
       code: authParams.code,

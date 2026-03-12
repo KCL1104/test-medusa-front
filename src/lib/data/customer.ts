@@ -10,14 +10,14 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
-  removePlatformAuthContext,
+  removeStarVaultsAuthContext,
   removeAuthToken,
   removeCartId,
-  setPlatformAuthContext,
+  setStarVaultsAuthContext,
   setAuthToken,
 } from "./cookies"
 
-type PlatformLoginResponse = {
+type StarVaultsLoginResponse = {
   token?: string
   location?: string
   message?: string
@@ -25,9 +25,9 @@ type PlatformLoginResponse = {
   platform_token?: string
 }
 
-const PLATFORM_AUTH_PATH = "/auth/platform-login"
+const STAR_VAULTS_AUTH_PATH = "/auth/platform-login"
 
-const resolvePlatformCallbackUrl = () => {
+const resolveStarVaultsCallbackUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"
   return baseUrl.replace(/\/+$/, "") + "/"
 }
@@ -80,7 +80,7 @@ export async function signout(countryCode: string) {
   await sdk.auth.logout()
 
   await removeAuthToken()
-  await removePlatformAuthContext()
+  await removeStarVaultsAuthContext()
 
   const customerCacheTag = await getCacheTag("customers")
   revalidateTag(customerCacheTag)
@@ -93,24 +93,24 @@ export async function signout(countryCode: string) {
   redirect(`/${countryCode}/account`)
 }
 
-export async function startPlatformLogin() {
+export async function startStarVaultsLogin() {
   const response = await sdk.client
-    .fetch<PlatformLoginResponse>(PLATFORM_AUTH_PATH, {
+    .fetch<StarVaultsLoginResponse>(STAR_VAULTS_AUTH_PATH, {
       method: "POST",
       body: {
-        callback_url: resolvePlatformCallbackUrl(),
+        callback_url: resolveStarVaultsCallbackUrl(),
       },
     })
     .catch(medusaError)
 
   if (!response?.location) {
-    throw new Error("Missing OAuth redirect location from platform login API")
+    throw new Error("Missing OAuth redirect location from Star Vaults login API")
   }
 
   redirect(response.location)
 }
 
-export async function completePlatformLogin({
+export async function completeStarVaultsLogin({
   code,
   token,
 }: {
@@ -118,11 +118,11 @@ export async function completePlatformLogin({
   token?: string
 }) {
   if (!code && !token) {
-    throw new Error("Missing OAuth authorization code or platform token")
+    throw new Error("Missing OAuth authorization code or Star Vaults token")
   }
 
   const response = await sdk.client
-    .fetch<PlatformLoginResponse>(PLATFORM_AUTH_PATH, {
+    .fetch<StarVaultsLoginResponse>(STAR_VAULTS_AUTH_PATH, {
       method: "POST",
       body: {
         ...(code ? { code } : {}),
@@ -132,13 +132,13 @@ export async function completePlatformLogin({
     .catch(medusaError)
 
   if (!response?.token) {
-    throw new Error(response?.message || "Platform login failed")
+    throw new Error(response?.message || "Star Vaults login failed")
   }
 
   await setAuthToken(response.token)
-  await setPlatformAuthContext({
-    platformUid: response.platform_uid,
-    platformToken: response.platform_token ?? token,
+  await setStarVaultsAuthContext({
+    starVaultsUid: response.platform_uid,
+    starVaultsToken: response.platform_token ?? token,
   })
 
   const customerCacheTag = await getCacheTag("customers")

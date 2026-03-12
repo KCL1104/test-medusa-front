@@ -10,14 +10,14 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
-  getPlatformAuthContext,
+  getStarVaultsAuthContext,
   removeCartId,
   setCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
 
-const CHAINUP_PROVIDER_ID = "pp_chainup_platform"
+const STAR_VAULTS_PROVIDER_ID = "pp_chainup_platform"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -250,18 +250,18 @@ export async function initiatePaymentSession(
 
   let paymentSessionInput = data
 
-  if (data.provider_id === CHAINUP_PROVIDER_ID) {
-    const { platformUid, platformToken } = await getPlatformAuthContext()
+  if (data.provider_id === STAR_VAULTS_PROVIDER_ID) {
+    const { starVaultsUid, starVaultsToken } = await getStarVaultsAuthContext()
 
-    if (!platformUid) {
+    if (!starVaultsUid) {
       throw new Error(
-        "Missing Platform OAuth session. Please sign in with Platform before selecting ChainUp."
+        "Missing Star Vaults OAuth session. Please sign in with Star Vaults before selecting Star Vaults."
       )
     }
 
     const extraData = {
-      platform_uid: platformUid,
-      ...(platformToken ? { token: platformToken } : {}),
+      platform_uid: starVaultsUid,
+      ...(starVaultsToken ? { token: starVaultsToken } : {}),
     }
 
     paymentSessionInput = {

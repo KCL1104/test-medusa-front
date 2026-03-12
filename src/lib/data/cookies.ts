@@ -1,12 +1,12 @@
 import "server-only"
 import { cookies as nextCookies } from "next/headers"
 
-const PLATFORM_UID_COOKIE = "_medusa_platform_uid"
-const PLATFORM_TOKEN_COOKIE = "_medusa_platform_token"
+const STAR_VAULTS_UID_COOKIE = "_medusa_platform_uid"
+const STAR_VAULTS_TOKEN_COOKIE = "_medusa_platform_token"
 
-export type PlatformAuthContext = {
-  platformUid?: string
-  platformToken?: string
+export type StarVaultsAuthContext = {
+  starVaultsUid?: string
+  starVaultsToken?: string
 }
 
 export const getAuthHeaders = async (): Promise<
@@ -74,19 +74,19 @@ export const removeAuthToken = async () => {
   })
 }
 
-export const getPlatformAuthContext = async (): Promise<PlatformAuthContext> => {
+export const getStarVaultsAuthContext = async (): Promise<StarVaultsAuthContext> => {
   const cookies = await nextCookies()
 
   return {
-    platformUid: cookies.get(PLATFORM_UID_COOKIE)?.value,
-    platformToken: cookies.get(PLATFORM_TOKEN_COOKIE)?.value,
+    starVaultsUid: cookies.get(STAR_VAULTS_UID_COOKIE)?.value,
+    starVaultsToken: cookies.get(STAR_VAULTS_TOKEN_COOKIE)?.value,
   }
 }
 
-export const setPlatformAuthContext = async ({
-  platformUid,
-  platformToken,
-}: PlatformAuthContext) => {
+export const setStarVaultsAuthContext = async ({
+  starVaultsUid,
+  starVaultsToken,
+}: StarVaultsAuthContext) => {
   const cookies = await nextCookies()
   const cookieOptions = {
     maxAge: 60 * 60 * 24 * 7,
@@ -95,25 +95,25 @@ export const setPlatformAuthContext = async ({
     secure: process.env.NODE_ENV === "production",
   }
 
-  if (platformUid) {
-    cookies.set(PLATFORM_UID_COOKIE, platformUid, cookieOptions)
+  if (starVaultsUid) {
+    cookies.set(STAR_VAULTS_UID_COOKIE, starVaultsUid, cookieOptions)
   } else {
-    cookies.set(PLATFORM_UID_COOKIE, "", { maxAge: -1 })
+    cookies.set(STAR_VAULTS_UID_COOKIE, "", { maxAge: -1 })
   }
 
-  if (platformToken) {
-    cookies.set(PLATFORM_TOKEN_COOKIE, platformToken, cookieOptions)
+  if (starVaultsToken) {
+    cookies.set(STAR_VAULTS_TOKEN_COOKIE, starVaultsToken, cookieOptions)
   } else {
-    cookies.set(PLATFORM_TOKEN_COOKIE, "", { maxAge: -1 })
+    cookies.set(STAR_VAULTS_TOKEN_COOKIE, "", { maxAge: -1 })
   }
 }
 
-export const removePlatformAuthContext = async () => {
+export const removeStarVaultsAuthContext = async () => {
   const cookies = await nextCookies()
-  cookies.set(PLATFORM_UID_COOKIE, "", {
+  cookies.set(STAR_VAULTS_UID_COOKIE, "", {
     maxAge: -1,
   })
-  cookies.set(PLATFORM_TOKEN_COOKIE, "", {
+  cookies.set(STAR_VAULTS_TOKEN_COOKIE, "", {
     maxAge: -1,
   })
 }

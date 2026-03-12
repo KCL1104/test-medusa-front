@@ -6,15 +6,17 @@ import { StoreCart, StoreCustomer } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 function CartMismatchBanner(props: {
   customer: StoreCustomer
   cart: StoreCart
 }) {
   const { customer, cart } = props
+  const t = useTranslations("Layout.CartMismatchBanner")
   const router = useRouter()
   const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("Retry cart sync")
+  const [actionKey, setActionKey] = useState<"retrySync" | "syncing">("retrySync")
 
   if (!customer || !!cart.customer_id) {
     return
@@ -23,12 +25,12 @@ function CartMismatchBanner(props: {
   const handleSubmit = async () => {
     try {
       setIsPending(true)
-      setActionText("Syncing...")
+      setActionKey("syncing")
 
       await transferCart()
       router.refresh()
     } catch {
-      setActionText("Retry cart sync")
+      setActionKey("retrySync")
     } finally {
       setIsPending(false)
     }
@@ -39,7 +41,7 @@ function CartMismatchBanner(props: {
       <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
         <span className="flex items-center gap-1">
           <ExclamationCircleSolid className="inline" />
-          We could not sync your cart after sign-in.
+          {t("syncError")}
         </span>
 
         <span>·</span>
@@ -51,7 +53,7 @@ function CartMismatchBanner(props: {
           disabled={isPending}
           onClick={handleSubmit}
         >
-          {actionText}
+          {t(actionKey)}
         </Button>
       </div>
     </div>

@@ -35,7 +35,7 @@ export const paymentInfoMap: Record<
     icon: <CreditCard />,
   },
   pp_chainup_platform: {
-    title: "ChainUp",
+    title: "Star Vaults",
     icon: <CreditCard />,
   },
   // Add more payment providers here
@@ -55,7 +55,7 @@ export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }
 
-export const isChainup = (providerId?: string) => {
+export const isStarVaults = (providerId?: string) => {
   return providerId === "pp_chainup_platform"
 }
 

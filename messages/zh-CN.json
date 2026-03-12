@@ -1,0 +1,298 @@
+{
+  "Layout": {
+    "Nav": {
+      "store": "Medusa 商店",
+      "account": "账户",
+      "cart": "购物车 ({count})"
+    },
+    "Footer": {
+      "storeName": "Medusa 商店",
+      "categories": "分类",
+      "collections": "系列",
+      "medusa": "Medusa",
+      "github": "GitHub",
+      "documentation": "文档",
+      "sourceCode": "源代码",
+      "copyright": "© {year} Medusa 商店。保留所有权利。"
+    },
+    "SideMenu": {
+      "menu": "菜单",
+      "home": "首页",
+      "store": "商店",
+      "account": "账户",
+      "cart": "购物车",
+      "copyright": "© {year} Medusa 商店。保留所有权利。"
+    },
+    "LanguageSelect": {
+      "language": "语言："
+    },
+    "CountrySelect": {
+      "shippingTo": "配送至："
+    },
+    "CartDropdown": {
+      "cart": "购物车",
+      "quantity": "数量：{count}",
+      "subtotal": "小计",
+      "exclTaxes": "（不含税）",
+      "goToCart": "前往购物车",
+      "emptyBag": "您的购物车是空的。",
+      "goToAllProducts": "前往所有商品页面",
+      "exploreProducts": "探索商品"
+    },
+    "CartMismatchBanner": {
+      "retrySync": "重试购物车同步",
+      "syncing": "同步中...",
+      "syncError": "登录后无法同步您的购物车。"
+    }
+  },
+  "Checkout": {
+    "Review": {
+      "review": "确认订单",
+      "legalNotice": "点击「提交订单」按钮，即表示您已阅读、理解并接受我们的使用条款、销售条款和退货政策，并确认您已阅读 Medusa 商店的隐私政策。"
+    },
+    "PaymentButton": {
+      "placeOrder": "提交订单",
+      "continueToPayment": "前往 Star Vaults 付款",
+      "retryPayment": "重试 Star Vaults 付款",
+      "selectPaymentMethod": "请选择付款方式",
+      "paymentNotCompleted": "Star Vaults 付款尚未完成。我们将自动重新打开 Star Vaults 付款页面。如未打开，请再次点击按钮。",
+      "missingPaymentUrl": "缺少 Star Vaults 付款页面链接。请返回并重新选择 Star Vaults。",
+      "failedToComplete": "Star Vaults 付款失败"
+    },
+    "Addresses": {
+      "shippingAddress": "收货地址",
+      "edit": "编辑",
+      "billingAddress": "账单地址",
+      "continueToDelivery": "继续至配送",
+      "contact": "联系信息",
+      "sameAsShipping": "账单地址与配送地址相同。"
+    },
+    "ShippingAddress": {
+      "savedAddressPrompt": "嗨 {name}，要使用已保存的地址吗？",
+      "firstName": "名",
+      "lastName": "姓",
+      "address": "地址",
+      "company": "公司",
+      "postalCode": "邮政编码",
+      "city": "城市",
+      "stateProvince": "州 / 省",
+      "billingSameAsShipping": "账单地址与收货地址相同",
+      "email": "电子邮箱",
+      "phone": "电话"
+    },
+    "BillingAddress": {
+      "firstName": "名",
+      "lastName": "姓",
+      "address": "地址",
+      "company": "公司",
+      "postalCode": "邮政编码",
+      "city": "城市",
+      "stateProvince": "州 / 省",
+      "phone": "电话"
+    },
+    "Shipping": {
+      "delivery": "配送",
+      "edit": "编辑",
+      "shippingMethod": "配送方式",
+      "howDelivered": "您希望如何接收订单",
+      "pickUpOrder": "自取订单",
+      "store": "门店",
+      "chooseStore": "选择附近的门店",
+      "method": "方式",
+      "continueToPayment": "继续至付款"
+    },
+    "DiscountCode": {
+      "addPromoCode": "添加优惠码",
+      "apply": "应用",
+      "promotionsApplied": "已应用的优惠：",
+      "removeDiscount": "从订单中移除优惠码"
+    },
+    "Payment": {
+      "signInRequired": "结账前需先登录 Star Vaults。",
+      "storefrontUpdated": "商店页面刚刚更新。请刷新并重新选择付款方式。",
+      "payment": "付款",
+      "edit": "编辑",
+      "paymentMethod": "付款方式",
+      "giftCard": "礼品卡",
+      "enterCardDetails": "输入卡片信息",
+      "continueToReview": "继续至确认订单",
+      "paymentDetails": "付款明细",
+      "anotherStep": "将会出现下一个步骤"
+    }
+  },
+  "Account": {
+    "Login": {
+      "welcomeBack": "欢迎回来",
+      "signInDescription": "登录以获得更好的购物体验。",
+      "signInWithStarVaults": "使用 Star Vaults 登录",
+      "notMember": "还不是会员？",
+      "joinUs": "加入我们"
+    },
+    "Register": {
+      "becomeAMember": "成为 Medusa 商店会员",
+      "createAccountDescription": "创建您的 Medusa 商店会员资料，享受更好的购物体验。",
+      "agreeToTerms": "创建账户即表示您同意 Medusa 商店的",
+      "privacyPolicy": "隐私政策",
+      "termsOfUse": "使用条款",
+      "signUpWithStarVaults": "使用 Star Vaults 注册",
+      "alreadyMember": "已经是会员？",
+      "signIn": "登录"
+    },
+    "Nav": {
+      "hello": "您好 {name}",
+      "account": "账户",
+      "profile": "个人资料",
+      "addresses": "地址",
+      "orders": "订单",
+      "logOut": "退出登录",
+      "overview": "概览"
+    },
+    "Overview": {
+      "hello": "您好 {name}",
+      "signedInAs": "登录身份：",
+      "profile": "个人资料",
+      "completed": "已完成",
+      "addresses": "地址",
+      "saved": "已保存",
+      "recentOrders": "最近订单",
+      "datePlaced": "下单日期",
+      "orderNumber": "订单编号",
+      "totalAmount": "总金额",
+      "goToOrder": "前往订单 #{id}",
+      "noRecentOrders": "没有最近的订单"
+    },
+    "ProfileEmail": {
+      "email": "电子邮箱"
+    },
+    "ProfilePassword": {
+      "password": "密码",
+      "passwordHidden": "出于安全考虑，密码不会显示",
+      "oldPassword": "旧密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认密码"
+    },
+    "AccountInfo": {
+      "cancel": "取消",
+      "edit": "编辑",
+      "updateSuccess": "{label} 更新成功",
+      "updateError": "发生错误，请重试",
+      "saveChanges": "保存更改"
+    },
+    "OrderCard": {
+      "items": "{count} 件商品",
+      "more": "更多",
+      "seeDetails": "查看详情"
+    },
+    "TransferRequest": {
+      "orderTransfers": "订单转移",
+      "cantFindOrder": "找不到您要找的订单？",
+      "connectOrder": "将订单关联到您的账户。",
+      "orderId": "订单 ID",
+      "requestTransfer": "申请转移",
+      "transferRequested": "已申请转移订单 {id}",
+      "transferEmailSent": "转移申请邮件已发送至 {email}"
+    }
+  },
+  "Products": {
+    "Actions": {
+      "selectVariant": "选择规格",
+      "outOfStock": "已售罄",
+      "addToCart": "加入购物车",
+      "selectOptions": "选择选项"
+    },
+    "Price": {
+      "from": "起 ",
+      "original": "原价："
+    },
+    "Tabs": {
+      "productInformation": "商品信息",
+      "shippingAndReturns": "配送与退货",
+      "material": "材质",
+      "countryOfOrigin": "产地",
+      "type": "类型",
+      "weight": "重量",
+      "dimensions": "尺寸",
+      "fastDelivery": "快速配送",
+      "fastDeliveryDescription": "您的包裹将在 3-5 个工作日内送达您指定的取货地点或您的住所。",
+      "simpleExchanges": "轻松换货",
+      "simpleExchangesDescription": "尺寸不太合适？别担心 - 我们会为您换一件新的。",
+      "easyReturns": "便捷退货",
+      "easyReturnsDescription": "只需退回商品，我们会退还款项。无需任何理由 – 我们会尽力确保您的退货体验顺畅。"
+    }
+  },
+  "Cart": {
+    "EmptyCart": {
+      "cart": "购物车",
+      "emptyMessage": "您的购物车里没有任何商品。使用下方链接开始浏览我们的商品吧。",
+      "exploreProducts": "探索商品"
+    },
+    "SignInPrompt": {
+      "alreadyHaveAccount": "已经有账户了？",
+      "signInForBetter": "登录以获得更好的体验。",
+      "signIn": "登录"
+    },
+    "Summary": {
+      "summary": "摘要",
+      "goToCheckout": "前往结账"
+    }
+  },
+  "Common": {
+    "CartTotals": {
+      "subtotal": "小计（不含运费和税费）",
+      "shipping": "运费",
+      "discount": "折扣",
+      "taxes": "税费",
+      "total": "总计"
+    }
+  },
+  "Store": {
+    "allProducts": "所有商品",
+    "Sort": {
+      "sortBy": "排序方式",
+      "latestArrivals": "最新上架",
+      "priceLowHigh": "价格：低到高",
+      "priceHighLow": "价格：高到低"
+    }
+  },
+  "Home": {
+    "Hero": {
+      "title": "电子商务入门模板",
+      "subtitle": "由 Medusa 和 Next.js 驱动",
+      "viewOnGithub": "在 GitHub 上查看"
+    }
+  },
+  "Order": {
+    "Details": {
+      "confirmationSent": "我们已将订单确认详情发送至",
+      "orderDate": "下单日期：",
+      "orderNumber": "订单编号：",
+      "orderStatus": "订单状态：",
+      "paymentStatus": "付款状态："
+    },
+    "Summary": {
+      "orderSummary": "订单摘要",
+      "subtotal": "小计",
+      "discount": "折扣",
+      "shipping": "运费",
+      "taxes": "税费",
+      "total": "总计"
+    },
+    "ShippingDetails": {
+      "delivery": "配送",
+      "shippingAddress": "收货地址",
+      "contact": "联系信息",
+      "method": "方式"
+    },
+    "PaymentDetails": {
+      "payment": "付款",
+      "paymentMethod": "付款方式",
+      "paymentDetails": "付款明细",
+      "paidAt": "付款时间"
+    },
+    "Help": {
+      "needHelp": "需要帮助？",
+      "contact": "联系我们",
+      "returnsAndExchanges": "退货与换货"
+    }
+  }
+}

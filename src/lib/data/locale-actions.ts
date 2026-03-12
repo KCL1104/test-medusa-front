@@ -3,9 +3,51 @@
 import { sdk } from "@lib/config"
 import { revalidateTag } from "next/cache"
 import { cookies as nextCookies } from "next/headers"
-import { getAuthHeaders, getCacheTag, getCartId } from "./cookies"
+import { getAuthHeaders, getCacheTag, getCartId, removeCartId } from "./cookies"
 
 const LOCALE_COOKIE_NAME = "_medusa_locale"
+
+const getLocaleUpdateErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (!error || typeof error !== "object") {
+    return ""
+  }
+
+  const candidate = error as {
+    message?: unknown
+    response?: {
+      data?: {
+        message?: unknown
+      }
+    }
+  }
+
+  if (typeof candidate.message === "string") {
+    return candidate.message
+  }
+
+  if (typeof candidate.response?.data?.message === "string") {
+    return candidate.response.data.message
+  }
+
+  return ""
+}
+
+const isStaleCartLocaleUpdateError = (error: unknown): boolean => {
+  const message = getLocaleUpdateErrorMessage(error).toLowerCase()
+
+  if (!message) {
+    return false
+  }
+
+  return (
+    message.includes("already completed") ||
+    (message.includes("cart") && message.includes("not found"))
+  )
+}
 
 /**
  * Gets the current locale from cookies
@@ -46,11 +88,23 @@ export const updateLocale = async (localeCode: string): Promise<string> => {
       ...(await getAuthHeaders()),
     }
 
-    await sdk.store.cart.update(cartId, { locale: localeCode }, {}, headers)
+    try {
+      await sdk.store.cart.update(cartId, { locale: localeCode }, {}, headers)
+    } catch (error) {
+      if (!isStaleCartLocaleUpdateError(error)) {
+        throw error
+      }
 
-    const cartCacheTag = await getCacheTag("carts")
-    if (cartCacheTag) {
-      revalidateTag(cartCacheTag)
+      const message = getLocaleUpdateErrorMessage(error) || "stale cart"
+      console.warn(
+        `[locale-switch] Cleared stale cart during locale update. cart_id=${cartId} locale=${localeCode} reason=${message}`
+      )
+      await removeCartId()
+    } finally {
+      const cartCacheTag = await getCacheTag("carts")
+      if (cartCacheTag) {
+        revalidateTag(cartCacheTag)
+      }
     }
   }
 

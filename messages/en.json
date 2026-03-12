@@ -1,0 +1,298 @@
+{
+  "Layout": {
+    "Nav": {
+      "store": "Medusa Store",
+      "account": "Account",
+      "cart": "Cart ({count})"
+    },
+    "Footer": {
+      "storeName": "Medusa Store",
+      "categories": "Categories",
+      "collections": "Collections",
+      "medusa": "Medusa",
+      "github": "GitHub",
+      "documentation": "Documentation",
+      "sourceCode": "Source code",
+      "copyright": "© {year} Medusa Store. All rights reserved."
+    },
+    "SideMenu": {
+      "menu": "Menu",
+      "home": "Home",
+      "store": "Store",
+      "account": "Account",
+      "cart": "Cart",
+      "copyright": "© {year} Medusa Store. All rights reserved."
+    },
+    "LanguageSelect": {
+      "language": "Language:"
+    },
+    "CountrySelect": {
+      "shippingTo": "Shipping to:"
+    },
+    "CartDropdown": {
+      "cart": "Cart",
+      "quantity": "Quantity: {count}",
+      "subtotal": "Subtotal",
+      "exclTaxes": "(excl. taxes)",
+      "goToCart": "Go to cart",
+      "emptyBag": "Your shopping bag is empty.",
+      "goToAllProducts": "Go to all products page",
+      "exploreProducts": "Explore products"
+    },
+    "CartMismatchBanner": {
+      "retrySync": "Retry cart sync",
+      "syncing": "Syncing...",
+      "syncError": "We could not sync your cart after sign-in."
+    }
+  },
+  "Checkout": {
+    "Review": {
+      "review": "Review",
+      "legalNotice": "By clicking the Place Order button, you confirm that you have read, understand and accept our Terms of Use, Terms of Sale and Returns Policy and acknowledge that you have read Medusa Store's Privacy Policy."
+    },
+    "PaymentButton": {
+      "placeOrder": "Place order",
+      "continueToPayment": "Continue to Star Vaults payment",
+      "retryPayment": "Retry Star Vaults payment",
+      "selectPaymentMethod": "Select a payment method",
+      "paymentNotCompleted": "Star Vaults payment is not completed yet. We will reopen Star Vaults payment once. If it doesn't open, click the button again.",
+      "missingPaymentUrl": "Missing Star Vaults payment page URL. Please go back and select Star Vaults again.",
+      "failedToComplete": "Failed to complete Star Vaults payment"
+    },
+    "Addresses": {
+      "shippingAddress": "Shipping Address",
+      "edit": "Edit",
+      "billingAddress": "Billing Address",
+      "continueToDelivery": "Continue to delivery",
+      "contact": "Contact",
+      "sameAsShipping": "Billing and delivery address are the same."
+    },
+    "ShippingAddress": {
+      "savedAddressPrompt": "Hi {name}, do you want to use one of your saved addresses?",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "address": "Address",
+      "company": "Company",
+      "postalCode": "Postal code",
+      "city": "City",
+      "stateProvince": "State / Province",
+      "billingSameAsShipping": "Billing address same as shipping address",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "BillingAddress": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "address": "Address",
+      "company": "Company",
+      "postalCode": "Postal code",
+      "city": "City",
+      "stateProvince": "State / Province",
+      "phone": "Phone"
+    },
+    "Shipping": {
+      "delivery": "Delivery",
+      "edit": "Edit",
+      "shippingMethod": "Shipping method",
+      "howDelivered": "How would you like your order delivered",
+      "pickUpOrder": "Pick up your order",
+      "store": "Store",
+      "chooseStore": "Choose a store near you",
+      "method": "Method",
+      "continueToPayment": "Continue to payment"
+    },
+    "DiscountCode": {
+      "addPromoCode": "Add Promotion Code(s)",
+      "apply": "Apply",
+      "promotionsApplied": "Promotion(s) applied:",
+      "removeDiscount": "Remove discount code from order"
+    },
+    "Payment": {
+      "signInRequired": "Star Vaults sign-in is required before checkout.",
+      "storefrontUpdated": "Storefront was just updated. Please refresh and choose your payment method again.",
+      "payment": "Payment",
+      "edit": "Edit",
+      "paymentMethod": "Payment method",
+      "giftCard": "Gift card",
+      "enterCardDetails": "Enter card details",
+      "continueToReview": "Continue to review",
+      "paymentDetails": "Payment details",
+      "anotherStep": "Another step will appear"
+    }
+  },
+  "Account": {
+    "Login": {
+      "welcomeBack": "Welcome back",
+      "signInDescription": "Sign in to access an enhanced shopping experience.",
+      "signInWithStarVaults": "Sign in with Star Vaults",
+      "notMember": "Not a member?",
+      "joinUs": "Join us"
+    },
+    "Register": {
+      "becomeAMember": "Become a Medusa Store Member",
+      "createAccountDescription": "Create your Medusa Store Member profile, and get access to an enhanced shopping experience.",
+      "agreeToTerms": "By creating an account, you agree to Medusa Store's",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "signUpWithStarVaults": "Sign up with Star Vaults",
+      "alreadyMember": "Already a member?",
+      "signIn": "Sign in"
+    },
+    "Nav": {
+      "hello": "Hello {name}",
+      "account": "Account",
+      "profile": "Profile",
+      "addresses": "Addresses",
+      "orders": "Orders",
+      "logOut": "Log out",
+      "overview": "Overview"
+    },
+    "Overview": {
+      "hello": "Hello {name}",
+      "signedInAs": "Signed in as:",
+      "profile": "Profile",
+      "completed": "Completed",
+      "addresses": "Addresses",
+      "saved": "Saved",
+      "recentOrders": "Recent orders",
+      "datePlaced": "Date placed",
+      "orderNumber": "Order number",
+      "totalAmount": "Total amount",
+      "goToOrder": "Go to order #{id}",
+      "noRecentOrders": "No recent orders"
+    },
+    "ProfileEmail": {
+      "email": "Email"
+    },
+    "ProfilePassword": {
+      "password": "Password",
+      "passwordHidden": "The password is not shown for security reasons",
+      "oldPassword": "Old password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password"
+    },
+    "AccountInfo": {
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "updateSuccess": "{label} updated successfully",
+      "updateError": "An error occurred, please try again",
+      "saveChanges": "Save changes"
+    },
+    "OrderCard": {
+      "items": "{count, plural, one {# item} other {# items}}",
+      "more": "more",
+      "seeDetails": "See details"
+    },
+    "TransferRequest": {
+      "orderTransfers": "Order transfers",
+      "cantFindOrder": "Can't find the order you are looking for?",
+      "connectOrder": "Connect an order to your account.",
+      "orderId": "Order ID",
+      "requestTransfer": "Request transfer",
+      "transferRequested": "Transfer for order {id} requested",
+      "transferEmailSent": "Transfer request email sent to {email}"
+    }
+  },
+  "Products": {
+    "Actions": {
+      "selectVariant": "Select variant",
+      "outOfStock": "Out of stock",
+      "addToCart": "Add to cart",
+      "selectOptions": "Select Options"
+    },
+    "Price": {
+      "from": "From ",
+      "original": "Original: "
+    },
+    "Tabs": {
+      "productInformation": "Product Information",
+      "shippingAndReturns": "Shipping & Returns",
+      "material": "Material",
+      "countryOfOrigin": "Country of origin",
+      "type": "Type",
+      "weight": "Weight",
+      "dimensions": "Dimensions",
+      "fastDelivery": "Fast delivery",
+      "fastDeliveryDescription": "Your package will arrive in 3-5 business days at your pick up location or in the comfort of your home.",
+      "simpleExchanges": "Simple exchanges",
+      "simpleExchangesDescription": "Is the fit not quite right? No worries - we'll exchange your product for a new one.",
+      "easyReturns": "Easy returns",
+      "easyReturnsDescription": "Just return your product and we'll refund your money. No questions asked – we'll do our best to make sure your return is hassle-free."
+    }
+  },
+  "Cart": {
+    "EmptyCart": {
+      "cart": "Cart",
+      "emptyMessage": "You don't have anything in your cart. Let's change that, use the link below to start browsing our products.",
+      "exploreProducts": "Explore products"
+    },
+    "SignInPrompt": {
+      "alreadyHaveAccount": "Already have an account?",
+      "signInForBetter": "Sign in for a better experience.",
+      "signIn": "Sign in"
+    },
+    "Summary": {
+      "summary": "Summary",
+      "goToCheckout": "Go to checkout"
+    }
+  },
+  "Common": {
+    "CartTotals": {
+      "subtotal": "Subtotal (excl. shipping and taxes)",
+      "shipping": "Shipping",
+      "discount": "Discount",
+      "taxes": "Taxes",
+      "total": "Total"
+    }
+  },
+  "Store": {
+    "allProducts": "All products",
+    "Sort": {
+      "sortBy": "Sort by",
+      "latestArrivals": "Latest Arrivals",
+      "priceLowHigh": "Price: Low -> High",
+      "priceHighLow": "Price: High -> Low"
+    }
+  },
+  "Home": {
+    "Hero": {
+      "title": "Ecommerce Starter Template",
+      "subtitle": "Powered by Medusa and Next.js",
+      "viewOnGithub": "View on GitHub"
+    }
+  },
+  "Order": {
+    "Details": {
+      "confirmationSent": "We have sent the order confirmation details to",
+      "orderDate": "Order date:",
+      "orderNumber": "Order number:",
+      "orderStatus": "Order status:",
+      "paymentStatus": "Payment status:"
+    },
+    "Summary": {
+      "orderSummary": "Order Summary",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "shipping": "Shipping",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "ShippingDetails": {
+      "delivery": "Delivery",
+      "shippingAddress": "Shipping Address",
+      "contact": "Contact",
+      "method": "Method"
+    },
+    "PaymentDetails": {
+      "payment": "Payment",
+      "paymentMethod": "Payment method",
+      "paymentDetails": "Payment details",
+      "paidAt": "paid at"
+    },
+    "Help": {
+      "needHelp": "Need help?",
+      "contact": "Contact",
+      "returnsAndExchanges": "Returns & Exchanges"
+    }
+  }
+}
