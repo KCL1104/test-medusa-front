@@ -4,6 +4,7 @@ import { transferCart } from "@lib/data/customer"
 import { ExclamationCircleSolid } from "@medusajs/icons"
 import { StoreCart, StoreCustomer } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 function CartMismatchBanner(props: {
@@ -11,8 +12,9 @@ function CartMismatchBanner(props: {
   cart: StoreCart
 }) {
   const { customer, cart } = props
+  const router = useRouter()
   const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("Run transfer again")
+  const [actionText, setActionText] = useState("Retry cart sync")
 
   if (!customer || !!cart.customer_id) {
     return
@@ -21,11 +23,13 @@ function CartMismatchBanner(props: {
   const handleSubmit = async () => {
     try {
       setIsPending(true)
-      setActionText("Transferring..")
+      setActionText("Syncing...")
 
       await transferCart()
+      router.refresh()
     } catch {
-      setActionText("Run transfer again")
+      setActionText("Retry cart sync")
+    } finally {
       setIsPending(false)
     }
   }
@@ -35,7 +39,7 @@ function CartMismatchBanner(props: {
       <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
         <span className="flex items-center gap-1">
           <ExclamationCircleSolid className="inline" />
-          Something went wrong when we tried to transfer your cart
+          We could not sync your cart after sign-in.
         </span>
 
         <span>·</span>

@@ -105,6 +105,14 @@ const Payment = ({
     [searchParams]
   )
 
+  const createChainupReturnPage = useCallback(() => {
+    if (typeof window === "undefined") {
+      return undefined
+    }
+
+    return `${window.location.origin}${pathname}`
+  }, [pathname])
+
   const handleEdit = () => {
     router.push(pathname + "?" + createQueryString("step", "payment"), {
       scroll: false,
@@ -132,8 +140,19 @@ const Payment = ({
       }
 
       if (!checkActiveSession) {
+        const chainupReturnPage = isChainup(selectedPaymentMethod)
+          ? createChainupReturnPage()
+          : undefined
+
         await initiatePaymentSession(cart, {
           provider_id: selectedPaymentMethod,
+          ...(chainupReturnPage
+            ? {
+                data: {
+                  return_page: chainupReturnPage,
+                },
+              }
+            : {}),
         })
       }
 

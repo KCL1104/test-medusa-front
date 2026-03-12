@@ -18,6 +18,49 @@ type PlatformLoginResponse = {
   platform_token?: string
 }
 
+async function transferCartToCustomer({
+  cartId,
+  customerToken,
+}: {
+  cartId: string
+  customerToken: string
+}) {
+  if (!BACKEND_URL) {
+    throw new Error("Missing MEDUSA_BACKEND_URL")
+  }
+
+  if (!PUBLISHABLE_API_KEY) {
+    throw new Error("Missing NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY")
+  }
+
+  const transferResponse = await fetch(`${BACKEND_URL}/store/carts/${cartId}/transfer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${customerToken}`,
+      "x-publishable-api-key": PUBLISHABLE_API_KEY,
+    },
+    body: "{}",
+    cache: "no-store",
+  })
+
+  if (!transferResponse.ok) {
+    let errorMessage = "Cart transfer failed"
+
+    try {
+      const errorPayload = (await transferResponse.json()) as { message?: string }
+      if (errorPayload?.message) {
+        errorMessage = errorPayload.message
+      }
+    } catch {
+      // Keep a deterministic fallback for non-JSON responses.
+      errorMessage = `Cart transfer failed with status ${transferResponse.status}`
+    }
+
+    throw new Error(errorMessage)
+  }
+}
+
 function getPlatformAuthParams(searchParams: URLSearchParams) {
   const code = searchParams.get("code") ?? undefined
   const token =
@@ -37,13 +80,11 @@ function getPlatformAuthParams(searchParams: URLSearchParams) {
 async function completePlatformAuth({
   request,
   countryCode,
-  cacheId,
   code,
   token,
 }: {
   request: NextRequest
   countryCode: string
-  cacheId: string
   code?: string
   token?: string
 }) {
@@ -90,16 +131,31 @@ async function completePlatformAuth({
       throw new Error(loginResult?.message || "Platform login failed")
     }
 
+    const cartId = request.cookies.get("_medusa_cart_id")?.value
+    if (cartId) {
+      try {
+        await transferCartToCustomer({
+          cartId,
+          customerToken: loginResult.token,
+        })
+      } catch (error) {
+        console.error(
+          "[OAuth cart sync] automatic transfer failed; user can retry from banner:",
+          error
+        )
+      }
+    }
+
     const response = NextResponse.redirect(accountUrl, 307)
     const secure = process.env.NODE_ENV === "production"
 
-    response.cookies.set("_medusa_cache_id", cacheId, {
+    response.cookies.set("_medusa_cache_id", crypto.randomUUID(), {
       maxAge: 60 * 60 * 24,
     })
     response.cookies.set("_medusa_jwt", loginResult.token, {
       maxAge: 60 * 60 * 24 * 7,
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: "lax",
       secure,
     })
 
@@ -107,7 +163,7 @@ async function completePlatformAuth({
       response.cookies.set("_medusa_platform_uid", loginResult.platform_uid, {
         maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure,
       })
     } else {
@@ -119,7 +175,7 @@ async function completePlatformAuth({
       response.cookies.set("_medusa_platform_token", platformToken, {
         maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure,
       })
     } else {
@@ -265,7 +321,6 @@ export async function middleware(request: NextRequest) {
     return completePlatformAuth({
       request,
       countryCode,
-      cacheId,
       code: authParams.code,
       token: authParams.token,
     })
