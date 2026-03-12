@@ -38,7 +38,9 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/messages ./messages
+COPY --from=builder /app/src/i18n ./src/i18n
 
 EXPOSE 8000
 ENV PORT=8000
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "echo 'Starting server...' && node server.js"]
